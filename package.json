@@ -1,0 +1,19 @@
+{
+  "name": "sls-rest-api-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "moment": "^2.30.1",
+    "serverless-offline": "^14.4.0",
+    "underscore": "^1.13.7",
+    "uuid": "^11.1.0"
+  }
+}
