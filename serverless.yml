@@ -7,6 +7,20 @@ service: sls-rest-api-backend
 plugins:
   - serverless-offline
 
+#Agregamos customHears para usarlos en la app
+custom:
+  allowedHeaders:
+    - Accept
+    - Content-Type
+    - Content-Length
+    - Authorization
+    - X-Amz-Date
+    - X-Api-Key
+    - X-Amz-Security-Token
+    - X-Amz-User-Agent
+    - userId
+    - username
+
 provider:
   name: aws
   runtime: nodejs20.x
@@ -14,9 +28,76 @@ provider:
   timeout: 5
   memorySize: 128
   stage: dev
-  endpointType: regional #Also, we can set 'edge-optimized'. 
+  endpointType: regional #Also, we can set 'edge-optimized'.
   environment:
     NOTES_TABLE: ${self:service}-${opt:stage, self:provider.stage} #  Define una variable de entorno llamada NOTES_TABLE que se pasará a las funciones Lambda. El valor se genera dinámicamente combinando el nombre del servicio (sls-rest-api-backend) y el stage (dev por defecto). Esto permite que el nombre de la tabla sea único por entorno
+    #This will allow all Lambdas to interact with DynamoDB
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+          Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.NOTES_TABLE}'
+          #Esto obtiene la región de AWS, ya sea de las opciones pasadas en la línea de comandos (opt:region) o de la configuración del proveedor (self:provider.region).
+
+functions:
+  add-note:
+    handler: api/add-note.handler
+    description: POST /note
+    events:
+      - http:
+          path: note
+          method: post
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders} #Referenciamos a los customHeaders que definimos debajo de plugins
+
+  update-note:
+    handler: api/update-note.handler
+    description: patch /note
+    events:
+      - http:
+          path: note
+          method: patch
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+
+  get-note:
+    handler: api/get-note.handler
+    description: GET /notes
+    events:
+      - http:
+          path: notes/n/{note_id}
+          method: get
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+
+  get-notes:
+    handler: api/get-notes.handler
+    description: get /notes
+    events:
+      - http:
+          path: notes
+          method: get
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+
+  delete-note:
+    handler: api/delete-note.handler
+    description: delete /note
+    events:
+      - http:
+          path: /note/t/{timestamps}
+          method: delete
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
 
 #Para la tabla de Notas, tendremos userId y timestamps como primary key y podríamos tener un GSI en el atributo noteId
 resources:
@@ -32,7 +113,7 @@ resources:
           - AttributeName: timestamps
             AttributeType: N
           - AttributeName: noteId
-            AttributeType: S  
+            AttributeType: S
         #Definimos la primary key (claves primarias) que determina cómo se particionan y ordenan los datos.
         KeySchema:
           - AttributeName: userId
@@ -52,11 +133,3 @@ resources:
             ProvisionedThroughput: #Define la capacidad provisionada para el GSI, que es independiente de la tabla principal.
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
-
-functions:
-  hello:
-    handler: handler.hello
-    events:
-      - httpApi:
-          path: /
-          method: get
