@@ -14,7 +14,6 @@ const tableName = process.env.NOTES_TABLE;
 export const handler = async (event) => {
   try {
     // Para la operación query siempre hay que mandar la primary key completa: tanto el partition key como la sort key.
-    console.log(JSON.parse(event));
     const noteId = decodeURIComponent(event.pathParameters.note_id);
 
     const request = {
@@ -40,10 +39,13 @@ export const handler = async (event) => {
       return {
         statusCode: 404,
         headers: utils.getResponseHeaders(),
+        body: JSON.stringify({
+          error: 'Not Found',
+          message: 'The note does not exist',
+        }),
       };
     }
   } catch (error) {
-    console.log('Something went wrong');
     return {
       statusCode: error.statusCode ? error.statusCode : 500,
       headers: utils.getResponseHeaders(),

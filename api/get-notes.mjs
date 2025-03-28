@@ -13,37 +13,36 @@ const tableName = process.env.NOTES_TABLE;
 
 export const handler = async (event) => {
   try {
-    console.log(JSON.parse(event));
     const params = event.queryStringParameters;
     const limit = params && params.limit ? parseInt(params.limit) : 3;
-    const user_id = utils.getUserId(event.headers);
+    const userId = utils.getUserId(event.headers);
 
     const request = {
       TableName: tableName,
-      KeyConditionExpression: 'userId = :uid',
+      KeyConditionExpression: 'userId = :userId',
       ExpressionAttributeValues: {
-        ':uid': user_id,
+        ':userId': userId,
       },
       Limit: limit,
-      ScanDataForward: false, //This returns the data sorted in descending order of the sort key(timestamps) (In reverse chronological order)
+      ScanDataForward: false, //This returns the data sorted in descending order of the sort key(timestamps) (In inverse chronological order - from the latest to the newest)
     };
 
     const startTimestamps = params && params.start ? parseInt(params.start) : 0; //TODO: Para qué es?
 
     if (startTimestamps > 0) {
       request.ExclusiveStartKey = {
-        user_id: user_id,
+        userId,
         timestamps: startTimestamps,
       };
     }
 
     const queryCommand = new QueryCommand(request);
     const response = await ddbDocClient.send(queryCommand);
-    console.log(JSON.stringify(response, null, 2));
+
     return {
       statusCode: 200,
       headers: utils.getResponseHeaders(), //TODO: Para qué es?
-      body: JSON.stringify(response),
+      body: JSON.stringify(response.Items),
     };
   } catch (error) {
     console.log('Something went wrong');

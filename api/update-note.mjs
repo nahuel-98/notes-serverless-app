@@ -53,20 +53,19 @@ export const handler = async (event) => {
       body: JSON.stringify(response.Attributes),
     };
   } catch (error) {
-    console.log(error);
-    if (error.statusCode === 404) {
+    if (error.$metadata.httpStatusCode === 400) {
       return {
-        statusCode: 404,
-        headers: utils.getResponseHeaders(), //Qué indica este header?
+        statusCode: 400,
+        headers: utils.getResponseHeaders(),
         body: JSON.stringify({
-          error: 'Not found',
-          message: 'Not found',
+          error: 'Bad request',
+          message: 'Bad request',
         }),
       };
     }
     return {
       statusCode: error.statusCode ? error.statusCode : 500,
-      headers: utils.getResponseHeaders(), //Qué indica este header?
+      headers: utils.getResponseHeaders(),
       body: JSON.stringify({
         error: 'Exception',
         message: 'Unknown error',
