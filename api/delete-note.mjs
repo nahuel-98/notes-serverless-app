@@ -23,17 +23,27 @@ export const handler = async (event) => {
         userId,
         timestamps,
       },
+      ReturnValues: 'ALL_OLD', //Devuelve los atributos del item eliminado
+      ConditionalExpression: 'attribute_exists(userId)', //Verifica que el item tenga el atributo userId antes de eliminarlo
     };
     const deleteCommand = new DeleteCommand(request);
     const response = await ddbDocClient.send(deleteCommand);
-    console.log(`DeleteCommand response: ${(response, null, 2)}`);
 
+    if (!response.Attributes) {
+      return {
+        statusCode: 404,
+        headers: utils.getResponseHeaders(),
+        body: JSON.stringify({
+          error: 'Not Found',
+          message: 'The note does not exist',
+        }),
+      };
+    }
     return {
       statusCode: 200,
       headers: utils.getResponseHeaders(),
     };
   } catch (error) {
-    console.log('Something went wrong');
     return {
       statusCode: error.statusCode ? error.statusCode : 500,
       headers: utils.getResponseHeaders(),
