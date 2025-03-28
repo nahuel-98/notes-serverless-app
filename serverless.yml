@@ -6,6 +6,7 @@ app: demo-projects
 service: sls-rest-api-backend
 plugins:
   - serverless-offline
+  - serverless-domain-manager
 
 #Agregamos customHears para usarlos en la app
 custom:
@@ -20,6 +21,12 @@ custom:
     - X-Amz-User-Agent
     - userId
     - username
+  customDomain:
+    domainName: api.nahueldev.site
+    basePath: 'v1'
+    stage: ${self:provider.stage}
+    certificateName: nahueldev.site #Lo configuraremos cuando estemos creando el certificado SSL
+    createRoute53Record: true # Creates DNS records
 
 provider:
   name: aws
@@ -27,7 +34,7 @@ provider:
   region: us-east-1
   timeout: 5
   memorySize: 128
-  stage: dev
+  stage: master
   endpointType: regional #Also, we can set 'edge-optimized'.
   environment:
     NOTES_TABLE: ${self:service}-${opt:stage, self:provider.stage} #  Define una variable de entorno llamada NOTES_TABLE que se pasará a las funciones Lambda. El valor se genera dinámicamente combinando el nombre del servicio (sls-rest-api-backend) y el stage (dev por defecto). Esto permite que el nombre de la tabla sea único por entorno
