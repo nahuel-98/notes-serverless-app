@@ -35,8 +35,6 @@ export const handler = async (event) => {
       body: JSON.stringify(item),
     };
   } catch (error) {
-    console.log('Something went wrong');
-    console.log(error);
     return {
       statusCode: error.statusCode ? error.statusCode : 500,
       headers: utils.getResponseHeaders(), //Qué indica este header?
