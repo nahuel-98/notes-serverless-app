@@ -1,14 +1,10 @@
-# "org" ensures this Service is used with the correct Serverless Framework Access Key.
 org: nahuelmedina
-# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
 app: demo-projects
-# "service" is the name of this project. This will also be added to your AWS resource names.
 service: sls-rest-api-backend
 plugins:
   - serverless-offline
   - serverless-domain-manager
 
-#Agregamos customHears para usarlos en la app
 custom:
   allowedHeaders:
     - Accept
@@ -25,8 +21,8 @@ custom:
     domainName: api.nahueldev.site
     basePath: 'v1'
     stage: ${self:provider.stage}
-    certificateName: nahueldev.site #Lo configuraremos cuando estemos creando el certificado SSL
-    createRoute53Record: true # Creates DNS records
+    certificateName: nahueldev.site
+    createRoute53Record: true
 
 provider:
   name: aws
@@ -35,10 +31,9 @@ provider:
   timeout: 5
   memorySize: 128
   stage: master
-  endpointType: regional #Also, we can set 'edge-optimized'.
+  endpointType: regional
   environment:
-    NOTES_TABLE: ${self:service}-${opt:stage, self:provider.stage} #  Define una variable de entorno llamada NOTES_TABLE que se pasará a las funciones Lambda. El valor se genera dinámicamente combinando el nombre del servicio (sls-rest-api-backend) y el stage (dev por defecto). Esto permite que el nombre de la tabla sea único por entorno
-    #This will allow all Lambdas to interact with DynamoDB
+    NOTES_TABLE: ${self:service}-${opt:stage, self:provider.stage}
   iam:
     role:
       statements:
@@ -48,7 +43,6 @@ provider:
             - dynamodb:PutItem
             - dynamodb:DeleteItem
           Resource: 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.NOTES_TABLE}'
-          #Esto obtiene la región de AWS, ya sea de las opciones pasadas en la línea de comandos (opt:region) o de la configuración del proveedor (self:provider.region).
 
 functions:
   add-note:
@@ -60,7 +54,7 @@ functions:
           method: post
           cors:
             origin: '*'
-            headers: ${self:custom.allowedHeaders} #Referenciamos a los customHeaders que definimos debajo de plugins
+            headers: ${self:custom.allowedHeaders}
 
   update-note:
     handler: api/update-note.handler
@@ -106,27 +100,25 @@ functions:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
 
-#Para la tabla de Notas, tendremos userId y timestamps como primary key y podríamos tener un GSI en el atributo noteId
 resources:
   Resources:
     NotesTable:
       Type: AWS::DynamoDB::Table
-      DeletionPolicy: Retain #Especifica que, si eliminas el stack de CloudFormation (por ejemplo, con sls remove), la tabla no se eliminará automáticamente.
+      DeletionPolicy: Retain
       Properties:
         TableName: ${self:provider.environment.NOTES_TABLE}
-        AttributeDefinitions: #Pondremos los key attributes que serán usados por las claves primaria y secundarias.
+        AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
           - AttributeName: timestamps
             AttributeType: N
           - AttributeName: noteId
             AttributeType: S
-        #Definimos la primary key (claves primarias) que determina cómo se particionan y ordenan los datos.
         KeySchema:
           - AttributeName: userId
-            KeyType: HASH #Indica que es una partition key (hash key) que determina en qué partición se almacenará cada item.
+            KeyType: HASH
           - AttributeName: timestamps
-            KeyType: RANGE #Sort key (range key) que permite ordenar los items dentro de una misma partición
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -136,7 +128,7 @@ resources:
               - AttributeName: noteId
                 KeyType: HASH
             Projection:
-              ProjectionType: ALL #Almacena todos los atributos en el GSI (no es muy eficiente económicamente)
-            ProvisionedThroughput: #Define la capacidad provisionada para el GSI, que es independiente de la tabla principal.
+              ProjectionType: ALL
+            ProvisionedThroughput:
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
