@@ -18,11 +18,13 @@ custom:
     - userId
     - username
   customDomain:
-    domainName: api.nahueldev.site
-    basePath: 'v1'
+    domainName: ${env:DOMAIN_NAME}
+    basePath: 'v2'
     stage: ${self:provider.stage}
-    certificateName: nahueldev.site
+    certificateName: ${env:CERTIFICATE_NAME}
     createRoute53Record: true
+
+useDotenv: true
 
 provider:
   name: aws
@@ -30,10 +32,13 @@ provider:
   region: us-east-1
   timeout: 5
   memorySize: 128
-  stage: master
+  # stage: ${env:STAGE}
+  stage: ${self:provider.environment.STAGE}
   endpointType: regional
   environment:
     NOTES_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    # STAGE: ${env:STAGE}
+    STAGE: dev
   iam:
     role:
       statements:
@@ -51,18 +56,18 @@ functions:
     events:
       - http:
           path: note
-          method: post
+          method: POST
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
 
   update-note:
     handler: api/update-note.handler
-    description: patch /note
+    description: PATCH /note
     events:
       - http:
           path: note
-          method: patch
+          method: PATCH
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -73,29 +78,29 @@ functions:
     events:
       - http:
           path: notes/n/{note_id}
-          method: get
+          method: GET
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
 
   get-notes:
     handler: api/get-notes.handler
-    description: get /notes
+    description: GET /notes
     events:
       - http:
           path: notes
-          method: get
+          method: GET
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
 
   delete-note:
     handler: api/delete-note.handler
-    description: delete /note
+    description: DELETE /note
     events:
       - http:
-          path: /note/t/{timestamps}
-          method: delete
+          path: note/t/{timestamps}
+          method: DELETE
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
