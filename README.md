@@ -12,13 +12,18 @@ authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
 
 # Serverless Notes Backend
 
-This repo consists of a Serverless Node.js REST API made from scratch using Serverless Framework. This allowed to integrate:
+This repo consists of a Serverless Node.js REST API made from scratch using Serverless Framework. The REST API can performs CRUD operations to allow notes management.
+This allowed to integrate:
 
 ✔ AWS API Gateway as an entry point for each endpoint.
 
 ✔ An AWS Lambda function that contains business logic.
 
 ✔ AWS DynamoDB as database.
+
+## Architecture
+
+![image](https://github.com/user-attachments/assets/07c1d98d-9c9d-4565-8ae9-7ce09d02bd57)
 
 ## Usage
 

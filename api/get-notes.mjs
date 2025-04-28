@@ -41,7 +41,7 @@ export const handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: utils.getResponseHeaders(), //TODO: Para qué es?
+      headers: utils.getResponseHeaders(),
       body: JSON.stringify(response.Items),
     };
   } catch (error) {

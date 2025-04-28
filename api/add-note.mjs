@@ -27,7 +27,7 @@ export const handler = async (event) => {
       Item: item,
     });
 
-    const response = await ddbDocClient.send(putCommand);
+    await ddbDocClient.send(putCommand);
 
     return {
       statusCode: 200,
@@ -37,7 +37,7 @@ export const handler = async (event) => {
   } catch (error) {
     return {
       statusCode: error.statusCode ? error.statusCode : 500,
-      headers: utils.getResponseHeaders(), //Qué indica este header?
+      headers: utils.getResponseHeaders(),
       body: JSON.stringify({
         error: 'Exception',
         message: 'Unknown error',
